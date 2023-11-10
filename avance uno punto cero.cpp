@@ -7,6 +7,9 @@ void imprimir_dados(int[][4], int);
 void lanzar_dados(int[][4], int);
 int apuesta(int[], int);
 
+int calcular_iguales(int [][4], int);
+int calcular_numero_mayor(int [][4], int);
+
 main(){
     srand(time(NULL));
     int num_jugadores;
@@ -103,4 +106,34 @@ int apuesta(int vector_dinero[], int n_jugador){
         cout<<"Apuesta una cantidad de dinero dentro de tus posibilidades, mugre limosnero"<<endl<<endl;
     }
     return apuesta;
+}
+
+int calcular_iguales(int matrix[][4], int jugador){
+    int n_dados_igual = 0;
+
+    if(matrix[jugador][0] == matrix[jugador][1]){
+        n_dados_igual++;
+    }
+    if(matrix[jugador][0] == matrix[jugador][2]){
+        n_dados_igual++;
+    }
+    if(matrix[jugador][1] == matrix[jugador][2]){
+        n_dados_igual++;
+    }
+
+    return n_dados_igual;
+}
+
+int calcular_numero_mayor(int matrix[][4], int jugador){
+    int n_mayor;
+    for(int i = 0; i<3; i++){
+        if(i == 0){
+            n_mayor = matrix[jugador][i];
+        }
+        if(matrix[jugador][i] > n_mayor){
+            n_mayor = matrix[jugador][i];
+        }
+    }
+
+    return n_mayor;
 }
