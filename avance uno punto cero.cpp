@@ -8,15 +8,15 @@ void lanzar_dados(int[][4], int);
 int apuesta(int[], int);
 
 main(){
-    srand(86);
+    srand(time(NULL));
     int num_jugadores;
     cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;
     string nombres[num_jugadores];
     int matriz_jugadores[num_jugadores][4], dinero_depositado[num_jugadores];
 
     for(int i = 0; i<num_jugadores; i++){
-        cout<<"ingresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
-        cout<<nombres[i]<<" ingresa la cantidad de dinero que quieres depositar "; cin>>dinero_depositado[i];
+        cout<<"Igresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
+        cout<<nombres[i]<<", ingresa la cantidad de dinero que quieres depositar:  "; cin>>dinero_depositado[i]; cout<<endl;
     }
 
     // fase de lanzar dado y apostar
@@ -27,10 +27,6 @@ main(){
         matriz_jugadores[i][3] = apuesta(dinero_depositado, i);
     }
 
-    for(int i = 0; i<4; i++){
-        cout<<matriz_jugadores[0][i];
-    }
-
     // fase comparar resultados
 }
 
@@ -38,6 +34,7 @@ main(){
 
 void imprimir_dados(int dado[][4], int num_jugador){
     int idx;
+    cout<<"Dados del jugador "<<num_jugador + 1<<endl;
     for(int i = 0; i<3; i++){
         idx = dado[num_jugador][i];
 
