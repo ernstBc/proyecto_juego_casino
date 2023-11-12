@@ -1,38 +1,81 @@
+/*
+Estructura de los arreglos
+matriz_jugadores -> filas == jugadores|| columna 0 -> cara dado1, col_1 ->cara_dado2, col_2 -> dado3, col_3 ->apuesta realizada
+dados_result --> filas == jugadores || col0 = n_caras_iguales, col_1 -> numero_mayor_dado
+dinero_depositado
+*/
+
+
 #include<iostream>
 #include<stdlib.h>
 #include<time.h>
 
 using namespace std;
-void imprimir_dados(int[][4], int);
-void lanzar_dados(int[][4], int);
-int apuesta(int[], int);
+void imprimir_dados(int[][4], int); // muestra el ascii de los dados
+void lanzar_dados(int[][4], int); // selecciona 3 numeros aleatorios y los coloca en el arr2d de jugadores
 
-int calcular_iguales(int [][4], int);
-int calcular_numero_mayor(int [][4], int);
+int apuesta(int[], int); // devuelve la apuesta del jugador -- comprueba la cantidad de dinero del jugador
+int calcular_iguales(int [][4], int); // calcula la cantidad de caras iguales de los dados tirados
+int calcular_numero_mayor(int [][4], int); // numero mayor de los dados lanzados
+int pool(int [][4], int); // suma todas las apuestas de los jugadores
+int pos_ganador(int [][2], int);
+int game_over(int [][2], int);
+bool empate(int [][2], int);
 
 main(){
     srand(time(NULL));
+    int pools = 0;
+
     int num_jugadores;
     cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;
-    string nombres[num_jugadores];
+
     int matriz_jugadores[num_jugadores][4], dinero_depositado[num_jugadores];
+    int dados_result[num_jugadores][2]; // 1 - n_caras iguales, 2 -> numero mayor
+    string nombres[num_jugadores];
 
     for(int i = 0; i<num_jugadores; i++){
         cout<<"Igresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
         cout<<nombres[i]<<", ingresa la cantidad de dinero que quieres depositar:  "; cin>>dinero_depositado[i]; cout<<endl;
     }
 
-    // fase de lanzar dado y apostar
-    for(int i = 0; i<num_jugadores; i++){
-        system("CLS");
-        lanzar_dados(matriz_jugadores, i);
-        imprimir_dados(matriz_jugadores, i);
-        matriz_jugadores[i][3] = apuesta(dinero_depositado, i);
+    while(0 == 0)
+    {
+        // fase de lanzar dado y apostar
+        for(int i = 0; i<num_jugadores; i++){
+            system("CLS");
+            lanzar_dados(matriz_jugadores, i);
+            imprimir_dados(matriz_jugadores, i);
+
+            matriz_jugadores[i][3] = apuesta(dinero_depositado, i);
+
+            // fase calcular resultados
+            dados_result[i][0] = calcular_iguales(matriz_jugadores, i);
+            dados_result[i][1] = calcular_numero_mayor(matriz_jugadores, i);
+            system("CLS");
+        }
+
+        pools = pools + pool(matriz_jugadores, num_jugadores);
+        bool emfate = empate(dados_result, num_jugadores);
+
+        cout<<"Pool: "<<pools;
+
+        if(emfate == 1){
+            continue;
+        }
+
+
+
     }
 
-    // fase comparar resultados
+/*
+    for(int i = 0; i<num_jugadores; i++){
+        cout<<"J"<<i<<":    ";
+        for(int j = 0; j<3; j++){
+            cout<<matriz_jugadores[i][j]<<" ";
+        }
+        cout<<"     "<<nombres[i]<<"gano "<<pools<<endl;
+    }*/
 }
-
 
 
 void imprimir_dados(int dado[][4], int num_jugador){
@@ -136,4 +179,37 @@ int calcular_numero_mayor(int matrix[][4], int jugador){
     }
 
     return n_mayor;
+}
+
+int pool(int matrix[][4], int n_jugadores){
+    int sum_apuestas = 0;
+    for(int i = 0; i<n_jugadores; i++){
+        sum_apuestas = matrix[i][3];
+    }
+    return sum_apuestas;
+}
+
+bool empate(int dados[][2], int n_jugadores){
+    bool empate = 0;
+    int max, iguales = 0;
+    for(int i = 0; i<n_jugadores-1; i++){
+        if(i == 0){
+            max = dados[i][0];
+        }
+        if(dados[i][0] > max){
+            max = dados[i][0];
+        }
+    }
+    
+    for(int i = 0; i<n_jugadores-1; i++){
+        if(max == dados[i][0]){
+            iguales++;
+        }
+    }
+
+    if(iguales>1){
+        empate = 1;
+    }
+
+    return empate;
 }
