@@ -16,25 +16,26 @@ void lanzar_dados(int[][4], int); // selecciona 3 numeros aleatorios y los coloc
 
 int apuesta(int[], int); // devuelve la apuesta del jugador -- comprueba la cantidad de dinero del jugador
 int calcular_iguales(int [][4], int); // calcula la cantidad de caras iguales de los dados tirados
-int calcular_numero_mayor(int [][4], int); // numero mayor de los dados lanzados
+int calcular_numero_mayor(int [][4], int); // numero mayor de los dados lanzados // ~~~~~cambiarla para que sirva para vectoes 1d~~~
 int pool(int [][4], int); // suma todas las apuestas de los jugadores
 int pos_ganador(int [][2], int);
 int game_over(int [][2], int);
 bool empate(int [][2], int);
+void mostrar_result(int [][4], int[][2], string[], int, int, int);
 
 main(){
     srand(time(NULL));
     int pools = 0;
 
     int num_jugadores;
-    cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;
+    cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;cout<<endl;
 
     int matriz_jugadores[num_jugadores][4], dinero_depositado[num_jugadores];
     int dados_result[num_jugadores][2]; // 1 - n_caras iguales, 2 -> numero mayor
     string nombres[num_jugadores];
 
     for(int i = 0; i<num_jugadores; i++){
-        cout<<"Igresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
+        cout<<"Ingresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
         cout<<nombres[i]<<", ingresa la cantidad de dinero que quieres depositar:  "; cin>>dinero_depositado[i]; cout<<endl;
     }
 
@@ -57,11 +58,21 @@ main(){
         pools = pools + pool(matriz_jugadores, num_jugadores);
         bool emfate = empate(dados_result, num_jugadores);
 
-        cout<<"Pool: "<<pools;
+        cout<<"\nPool: "<<pools;
 
         if(emfate == 1){
+            mostrar_result(matriz_jugadores, dados_result, nombres, num_jugadores, -1, pools);
+            int enter;
+            cin>>enter;
             continue;
         }
+        int posicion_ganador = pos_ganador(dados_result, num_jugadores);
+        mostrar_result(matriz_jugadores, dados_result, nombres, num_jugadores, posicion_ganador, pools);
+        break;
+
+
+
+
 
 
 
@@ -184,7 +195,7 @@ int calcular_numero_mayor(int matrix[][4], int jugador){
 int pool(int matrix[][4], int n_jugadores){
     int sum_apuestas = 0;
     for(int i = 0; i<n_jugadores; i++){
-        sum_apuestas = matrix[i][3];
+        sum_apuestas += matrix[i][3];
     }
     return sum_apuestas;
 }
@@ -212,4 +223,49 @@ bool empate(int dados[][2], int n_jugadores){
     }
 
     return empate;
+}
+int pos_ganador(int dados[][2], int n_jugadores){
+    int n_mayor, pos_win = 0;
+    for(int i = 0; i<n_jugadores; i++){     
+        if(i == 0){
+            n_mayor = dados[i][0];
+            pos_win = i;
+        }
+
+        if(dados[i][0] > n_mayor){
+            n_mayor = dados[i][0];
+            pos_win = i;
+        }
+    }
+
+    return pos_win;
+}
+
+void mostrar_result(int matrix[][4], int dados[][2], string names[], int n_jugadores, int pos_ganador, int pool){
+
+    cout<<endl;
+    for(int i =0; i<n_jugadores; i++){
+        cout<<"J"<<i+1<<":      ";
+        for(int j = 0; j<3; j++){
+            cout<<matrix[i][j]<<" ";
+            if(j == 2){
+                cout<<"     "<<names[i];
+
+                if(pos_ganador>=0){
+                    if(i == pos_ganador){
+                        cout<<" gano "<<pool;
+                    }
+                    else{
+                        cout<<" perdio "<<matrix[i][3];
+                    }
+                }
+                else{
+                    cout<<"Empate -- Se pasa +"<<matrix[i][3]<<" al pool de la proxima partida.";
+                }
+
+            }
+        }
+        cout<<endl;
+
+    }
 }
