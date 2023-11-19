@@ -1,6 +1,6 @@
 /*
 Ernesto Bravo Contreras
-Avance #1       13/11/23
+Avance #2      13/11/23
 
 Estructura de los arreglos
 matriz_jugadores -> filas == jugadores|| columna 0 -> cara dado1, col_1 ->cara_dado2, col_2 -> dado3, col_3 ->apuesta realizada
@@ -30,9 +30,6 @@ int verif_valor_repe_col(int[][8], int, int, int);
 void redistribuir(int[][8], int, int, int, int, int);
 int pos_cero_dinero(int [][8], int, int);
 
-
-
-
 void iniciar_matriz(int [][8], int);
 
 main(){
@@ -48,6 +45,7 @@ main(){
     int posicion_ganador;
     cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;cout<<endl;
 
+    int num_jugadores_activos = num_jugadores;
     int matriz_juego[num_jugadores][8], jugadores_activos[num_jugadores];
     string nombres[num_jugadores];
     iniciar_matriz(matriz_juego, num_jugadores);
@@ -60,21 +58,23 @@ main(){
         jugadores_activos[i] = 1;
     }
 
-    while(num_jugadores>1)
+    while(num_jugadores_activos>1)
     {
         // fase de lanzar dado y apostar
         for(int i = 0; i<num_jugadores; i++){
-            //system("CLS");
-            lanzar_dados(matriz_juego, i);
-            imprimir_dados(matriz_juego, i);
+            if(jugadores_activos[i] == 1){
+                system("CLS");
+                lanzar_dados(matriz_juego, i);
+                imprimir_dados(matriz_juego, i);
 
-            matriz_juego[i][IDX_APUESTA] = apuesta(matriz_juego, i, IDX_DINERO);
+                matriz_juego[i][IDX_APUESTA] = apuesta(matriz_juego, i, IDX_DINERO);
 
-            // fase calcular resultados
-            matriz_juego[i][IDX_N_IGUALES] = calcular_iguales(matriz_juego, i);
-            matriz_juego[i][IDX_NUM_MAYOR] = calcular_numero_mayor(matriz_juego, i);
-            matriz_juego[i][IDX_PAR_MAYOR] = calcular_num_caras_ig(matriz_juego, i);
-            //system("CLS");
+                // fase calcular resultados
+                matriz_juego[i][IDX_N_IGUALES] = calcular_iguales(matriz_juego, i);
+                matriz_juego[i][IDX_NUM_MAYOR] = calcular_numero_mayor(matriz_juego, i);
+                matriz_juego[i][IDX_PAR_MAYOR] = calcular_num_caras_ig(matriz_juego, i);
+                system("CLS");
+            }
         }
 
         for(int j = 0; j<num_jugadores; j++){
@@ -91,7 +91,7 @@ main(){
         if(emfate == 1){
             mostrar_result(matriz_juego, nombres, num_jugadores, -1, pools);
             int enter;
-            cin>>enter;
+            cout<<"Ingresa cualqueir numero para pasar a la siguiente ronda   ";cin>>enter;
             continue;
         }
 
@@ -101,30 +101,30 @@ main(){
 
         mostrar_result(matriz_juego, nombres, num_jugadores, posicion_ganador, pools);
         redistribuir(matriz_juego, num_jugadores, posicion_ganador, pools, IDX_DINERO, IDX_APUESTA);
+/**/
+        for(int j = 0; j<num_jugadores; j++){
+            for(int i =0; i<8; i++){
+                cout<<matriz_juego[j][i]<<"  ";
+            }
+        cout<<"------------------\n";
+        }
+/**/
+
         int jugadores_sin_money = 0;
         while(jugadores_sin_money != -1){
             int pos_ceros = pos_cero_dinero(matriz_juego, num_jugadores, IDX_DINERO);
             if(pos_ceros != -1){
                 jugadores_activos[pos_ceros] = 0;
-                num_jugadores--;
+                //"borra" al jugador sin dinero de la partida
+                for(int j = 0; j<8; j++){
+                    matriz_juego[pos_ceros][j] = 0;
+                }
+                num_jugadores_activos--;
             }
             else{
                 jugadores_sin_money = -1;
             }
         }
-        int matriz_jugadores2[num_jugadores][8];
-        for(int i = 0;  i<num_jugadores; i++){
-            if(jugadores_activos[i] == 1){
-                for(int j = 0; j<8; j++){
-                    matriz_jugadores2[i][j] = matriz_juego[i][j];
-                }
-            }
-        }
-        //matriz_juego = matriz_jugadores2;
-        if(num_jugadores == 1){
-             break;
-        }
-
     }
 }
 
@@ -413,7 +413,7 @@ int ganador(int matriz[][8], int n_jugadores, int idx_pares, int idx_num_mayor, 
 void redistribuir(int matriz[][8], int n_jugadores, int pos_ganadors,int pools,  int idx_dinero, int idx_apuestas){
     for(int i = 0; i<n_jugadores; i++){
         if(i != pos_ganadors){
-            matriz[i][idx_dinero]  = matriz[i][idx_apuestas];
+            matriz[i][idx_dinero]  -= matriz[i][idx_apuestas];
             matriz[i][idx_apuestas] = 0;
         }
         else{
