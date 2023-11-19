@@ -6,12 +6,6 @@ Estructura de los arreglos
 matriz_jugadores -> filas == jugadores|| columna 0 -> cara dado1, col_1 ->cara_dado2, col_2 -> dado3, col_3 ->apuesta realizada
 dados_result --> filas == jugadores || col0 = n_caras_iguales, col_1 -> numero_mayor_dado, col_2 -> num_caras_iguales||
 
-
-
---futuros updates--
-1.juntar todos los arreglos en uno solo, a excepcion del de los nombres.
-2. Modificar las funciones para que se acceda cierta columna por medio de un parametro espeficidado.
-
 */
 #include<iostream>
 #include<stdlib.h>
@@ -26,16 +20,16 @@ int calcular_iguales(int [][8], int); // calcula la cantidad de caras iguales de
 int calcular_numero_mayor(int [][8], int); // numero mayor de los dados lanzados // ~~~~~cambiarla para que sirva para vectoes 1d~~~
 int calcular_num_caras_ig(int [][8], int); // num_pares_caras iguales
 int pool(int [][8], int, int); // suma todas las apuestas de los jugadores
-int pos_ganador(int [][8], int, int);
-int game_over(int [][3], int);
 int empate(int [][8], int, int, int, int);
 void mostrar_result(int [][8], string[], int, int, int);
-
 
 int ganador(int [][8], int, int, int, int);
 int num_mayor_col(int [][8], int, int);
 int pos_mayor_col(int [][8], int, int);
 int verif_valor_repe_col(int[][8], int, int, int);
+void redistribuir(int[][8], int, int, int, int, int);
+int pos_cero_dinero(int [][8], int, int);
+
 
 
 
@@ -49,13 +43,12 @@ main(){
     int IDX_N_IGUALES = 5;
     int IDX_NUM_MAYOR = 6;
     int IDX_PAR_MAYOR = 7;
-
     int pools = 0;
     int num_jugadores;
     int posicion_ganador;
     cout<<"Ingresa el numero de jugadores (2 a 4 jugadores): "; cin>>num_jugadores;cout<<endl;
 
-    int matriz_juego[num_jugadores][8];
+    int matriz_juego[num_jugadores][8], jugadores_activos[num_jugadores];
     string nombres[num_jugadores];
     iniciar_matriz(matriz_juego, num_jugadores);
 
@@ -64,9 +57,10 @@ main(){
         cout<<"Ingresa el nombre del jugador "<<i + 1<<": ";cin>>nombres[i];
         cout<<nombres[i]<<", ingresa la cantidad de dinero que quieres depositar:  ";cin>>dinero; cout<<endl;
         matriz_juego[i][IDX_DINERO] = dinero;
+        jugadores_activos[i] = 1;
     }
 
-    while(0 == 0)
+    while(num_jugadores>1)
     {
         // fase de lanzar dado y apostar
         for(int i = 0; i<num_jugadores; i++){
@@ -106,7 +100,30 @@ main(){
         cout<<nombres[posicion_ganador]<<" ha ganado!";
 
         mostrar_result(matriz_juego, nombres, num_jugadores, posicion_ganador, pools);
-        break;
+        redistribuir(matriz_juego, num_jugadores, posicion_ganador, pools, IDX_DINERO, IDX_APUESTA);
+        int jugadores_sin_money = 0;
+        while(jugadores_sin_money != -1){
+            int pos_ceros = pos_cero_dinero(matriz_juego, num_jugadores, IDX_DINERO);
+            if(pos_ceros != -1){
+                jugadores_activos[pos_ceros] = 0;
+                num_jugadores--;
+            }
+            else{
+                jugadores_sin_money = -1;
+            }
+        }
+        int matriz_jugadores2[num_jugadores][8];
+        for(int i = 0;  i<num_jugadores; i++){
+            if(jugadores_activos[i] == 1){
+                for(int j = 0; j<8; j++){
+                    matriz_jugadores2[i][j] = matriz_juego[i][j];
+                }
+            }
+        }
+        //matriz_juego = matriz_jugadores2;
+        if(num_jugadores == 1){
+             break;
+        }
 
     }
 }
@@ -284,33 +301,6 @@ int empate(int matriz[][8], int n_jugadores, int idx_pares, int idx_n_mayor, int
     }
 }
 
-int pos_ganador(int dados[][8], int n_jugadores, int tipo_empate, int idx_n_pares){
-    /*
-    Devuelve la posicion de la columna de pares 
-    */
-    int max, pos_win = 0;
-    if(tipo_empate == 0){
-        max = num_mayor_col(dados, n_jugadores, idx_n_pares);
-
-        for(int i = 0; i<n_jugadores; i++){     
-            if(dados[i][idx_n_pares] == max){
-                pos_win = i;
-            }
-        }  
-    }
-    else if(tipo_empate == -1){ // -1 -> empate porque nadie saco iguales
-        max = num_mayor_col(dados, n_jugadores, 1);
-
-        for(int i = 0; i<n_jugadores; i++){     
-            if(dados[i][1] == max){
-                pos_win = i;
-            }
-        }
-    }
-    return pos_win;
-}
-
-
 void mostrar_result(int matrix[][8], string names[], int n_jugadores, int pos_ganador, int pool){
 
     cout<<endl;
@@ -326,11 +316,11 @@ void mostrar_result(int matrix[][8], string names[], int n_jugadores, int pos_ga
                         cout<<" gano "<<pool;
                     }
                     else{
-                        cout<<" perdio "<<matrix[i][3];
+                        cout<<" perdio "<<matrix[i][4];
                     }
                 }
                 else{
-                    cout<<"     Empate -- Se pasa +"<<matrix[i][3]<<" al pool de la proxima partida.";
+                    cout<<"     Empate -- Se pasa +"<<matrix[i][4]<<" al pool de la proxima partida.";
                 }
 
             }
@@ -396,7 +386,7 @@ int verif_valor_repe_col(int matrix[][8], int num_jugadores, int idx_col, int po
 
 
 int ganador(int matriz[][8], int n_jugadores, int idx_pares, int idx_num_mayor, int idx_caras_mayor){
-    int empate = 0, pos_win, ver_empate;
+    int pos_win;
     int max;
     max = num_mayor_col(matriz, n_jugadores, idx_pares);
 
@@ -418,4 +408,27 @@ int ganador(int matriz[][8], int n_jugadores, int idx_pares, int idx_num_mayor, 
         }
     }
 
+}
+
+void redistribuir(int matriz[][8], int n_jugadores, int pos_ganadors,int pools,  int idx_dinero, int idx_apuestas){
+    for(int i = 0; i<n_jugadores; i++){
+        if(i != pos_ganadors){
+            matriz[i][idx_dinero]  = matriz[i][idx_apuestas];
+            matriz[i][idx_apuestas] = 0;
+        }
+        else{
+            matriz[i][idx_dinero] += pools;
+            matriz[i][idx_apuestas] = 0;           
+        }
+    }
+}
+
+int pos_cero_dinero(int matriz[][8], int n_jugadores, int idx_col){
+    int pos = -1;
+    for(int i = 0; i<n_jugadores; i++){
+        if(matriz[i][idx_col] == 0){
+            pos = i;
+        }
+    }
+    return pos;
 }
