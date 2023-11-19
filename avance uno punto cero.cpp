@@ -29,6 +29,7 @@ int pos_mayor_col(int [][8], int, int);
 int verif_valor_repe_col(int[][8], int, int, int);
 void redistribuir(int[][8], int, int, int, int, int);
 int pos_cero_dinero(int [][8], int, int);
+int verif_arr_repetidos(int [][8], int, int, int);
 
 void iniciar_matriz(int [][8], int);
 
@@ -431,4 +432,32 @@ int pos_cero_dinero(int matriz[][8], int n_jugadores, int idx_col){
         }
     }
     return pos;
+}
+
+int verif_arr_repetidos(int matriz[][8], int n_jugadores, int idx_jugador1){
+    int rep [3], identicos = 0;
+    rep[0] = 0, rep[1] = 0, rep[2] = 0;
+
+    for(int i = 0; i<3; i++){
+        int arr_jugador = matriz[idx_jugador1][i];
+        for(int j = 0; j<n_jugadores; j++){
+            if(j != idx_jugador1){
+                if(matriz[j][i] == arr_jugador){
+                    rep[i] = 1;
+                }
+            }
+        }
+    }
+
+    int sum_ident = 0;
+    for(int i =0; i<3; i++){
+        if(rep[i] == 1){
+            sum_ident++;
+        }
+    }
+
+    if(sum_ident == 3){
+        identicos = 1;
+    }
+    return identicos;
 }
