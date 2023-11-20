@@ -3,9 +3,6 @@ Ernesto Bravo Contreras
 Avance #2      13/11/23
 
 Estructura de los arreglos
-matriz_jugadores -> filas == jugadores|| columna 0 -> cara dado1, col_1 ->cara_dado2, col_2 -> dado3, col_3 ->apuesta realizada
-dados_result --> filas == jugadores || col0 = n_caras_iguales, col_1 -> numero_mayor_dado, col_2 -> num_caras_iguales||
-
 */
 #include<iostream>
 #include<stdlib.h>
@@ -37,6 +34,7 @@ void iniciar_matriz(int [][10], int);
 main(){
     srand(time(NULL));
 
+    // estructura del arreglo (columnas)
     int IDX_DINERO = 3;
     int IDX_APUESTA = 4;
     int IDX_N_IGUALES = 5;
@@ -80,14 +78,6 @@ main(){
                 matriz_juego[i][IDX_SUM_DADOS] = sum_dados(matriz_juego, i);
                 system("CLS");
             }
-
-        }
-
-        for(int j = 0; j<num_jugadores; j++){
-            for(int i =0; i<8; i++){
-                cout<<matriz_juego[j][i]<<"  ";
-            }
-        cout<<"------------------\n";
         }
 
         pools = pools + pool(matriz_juego, num_jugadores, IDX_APUESTA);
@@ -96,27 +86,26 @@ main(){
         cout<<"\nPool: "<<pools;
         if(emfate == 1){
             mostrar_result(matriz_juego, nombres, num_jugadores, -1, pools);
-            cout<<"Ingresa cualqueir numero para pasar a la siguiente ronda   ";cin>>wait;
+            cout<<"Ingresa cualquier tecla + Enter para pasar a la siguiente ronda   ";cin>>wait;
             continue;
         }
 
         posicion_ganador = ganador(matriz_juego, num_jugadores, IDX_N_IGUALES, IDX_NUM_MAYOR, IDX_PAR_MAYOR);
-        cout<<endl<<endl;
-        cout<<nombres[posicion_ganador]<<" ha ganado!";
+        cout<<endl<<endl<<nombres[posicion_ganador]<<" ha ganado!";
 
         mostrar_result(matriz_juego, nombres, num_jugadores, posicion_ganador, pools);
         redistribuir(matriz_juego, num_jugadores, posicion_ganador, pools, IDX_DINERO, IDX_APUESTA);
-        pools = 0;
-/**/
+        pools = 0; // reinicia el monto de las apuestas al finalizar la partida.
+
+/**     nomas para comprobar como va el arreglo en cada turno. 
         for(int j = 0; j<num_jugadores; j++){
             for(int i =0; i<8; i++){
                 cout<<matriz_juego[j][i]<<"  ";
             }
         cout<<"------------------\n";
         }
+ */
 
-        cin>>wait;
-/**/
 
         int jugadores_sin_money = 0;
         while(jugadores_sin_money != -1){
@@ -130,12 +119,14 @@ main(){
                         matriz_juego[pos_ceros][IDX_DINERO] = -1;
                     }
                 }
+                cout<<"Jugador "<<pos_ceros + 1<<": "<<nombres[pos_ceros]<<" no tiene dinero suficiente para continuar. Queda eliminado del juego.\n";
                 num_jugadores_activos--;
             }
             else{
                 jugadores_sin_money = -1;
             }
         }
+        cout<<"Presiona cualquier tecla para empezar una nueva ronda: ";cin>>wait;
     }
 
     cout<<"\nFin del juego.";
@@ -317,7 +308,6 @@ int empate(int matriz[][10], int n_jugadores, int idx_pares, int idx_n_mayor, in
 void mostrar_result(int matrix[][10], string names[], int n_jugadores, int pos_ganador, int pool){
 
     cout<<endl;
-
     for(int i =0; i<n_jugadores; i++){
         if(matrix[i][9] == 1){
             cout<<"J"<<i+1<<":      ";
