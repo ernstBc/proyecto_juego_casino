@@ -1,8 +1,7 @@
 /*
 Ernesto Bravo Contreras
-Avance #2      13/11/23
+Avance #2      20/11/23
 
-Estructura de los arreglos
 */
 #include<iostream>
 #include<stdlib.h>
@@ -11,25 +10,26 @@ Estructura de los arreglos
 using namespace std;
 void imprimir_dados(int[][10], int); // muestra el ascii de los dados
 void lanzar_dados(int[][10], int); // selecciona 3 numeros aleatorios y los coloca en el arr2d de jugadores
+void matriz_a_cero(int [][10], int, int, int);
+void iniciar_matriz(int [][10], int);
+void redistribuir(int[][10], int, int, int, int, int);
+void mostrar_result(int [][10], string[], int, int, int);
 
 int apuesta(int[][10], int, int); // devuelve la apuesta del jugador -- comprueba la cantidad de dinero del jugador
 int calcular_iguales(int [][10], int); // calcula la cantidad de caras iguales de los dados tirados
 int calcular_numero_mayor(int [][10], int); // numero mayor de los dados lanzados // ~~~~~cambiarla para que sirva para vectoes 1d~~~
 int calcular_num_caras_ig(int [][10], int); // num_pares_caras iguales
 int pool(int [][10], int, int); // suma todas las apuestas de los jugadores
-int empate(int [][10], int, int, int, int);
-void mostrar_result(int [][10], string[], int, int, int);
-
-int ganador(int [][10], int, int, int, int);
+int empate(int [][10], int, int, int, int, int);
+int ganador(int [][10], int, int, int, int, int);
 int num_mayor_col(int [][10], int, int);
 int pos_mayor_col(int [][10], int, int);
 int verif_valor_repe_col(int[][10], int, int, int);
-void redistribuir(int[][10], int, int, int, int, int);
 int pos_cero_dinero(int [][10], int, int);
-int verif_arr_repetidos(int [][10], int, int, int);
+int verif_arr_repetidos(int [][10], int, int);
 int sum_dados(int[][10], int);
+int sacar_la_basura(int [][10], string[], int, int);
 
-void iniciar_matriz(int [][10], int);
 
 main(){
     srand(time(NULL));
@@ -51,7 +51,7 @@ main(){
     int num_jugadores_activos = num_jugadores;
     int matriz_juego[num_jugadores][10];
     string nombres[num_jugadores];
-    iniciar_matriz(matriz_juego, num_jugadores);
+    //iniciar_matriz(matriz_juego, num_jugadores);
 
     int dinero;
     for(int i = 0; i<num_jugadores; i++){
@@ -63,15 +63,13 @@ main(){
 
     while(num_jugadores_activos>1)
     {
-        // fase de lanzar dado y apostar
+        // fase de lanzar dado y apostar|| solo para los jugadores activos
         for(int i = 0; i<num_jugadores; i++){
             if(matriz_juego[i][IDX_JUGADOR_ACTIVO] == 1){
                 system("CLS");
                 lanzar_dados(matriz_juego, i);
                 imprimir_dados(matriz_juego, i);
-
                 matriz_juego[i][IDX_APUESTA] = apuesta(matriz_juego, i, IDX_DINERO);
-                                    // fase calcular resultados
                 matriz_juego[i][IDX_N_IGUALES] = calcular_iguales(matriz_juego, i);
                 matriz_juego[i][IDX_NUM_MAYOR] = calcular_numero_mayor(matriz_juego, i);
                 matriz_juego[i][IDX_PAR_MAYOR] = calcular_num_caras_ig(matriz_juego, i);
@@ -79,56 +77,42 @@ main(){
                 system("CLS");
             }
         }
-
         pools = pools + pool(matriz_juego, num_jugadores, IDX_APUESTA);
-        int emfate = empate(matriz_juego, num_jugadores, IDX_NUM_MAYOR, IDX_NUM_MAYOR, IDX_PAR_MAYOR);
 
+        // Esta linea devuelve la posicion del ganador, en caso de empate devuelve -1
+        posicion_ganador = ganador(matriz_juego, num_jugadores, IDX_N_IGUALES, IDX_NUM_MAYOR, IDX_PAR_MAYOR, IDX_SUM_DADOS);
         cout<<"\nPool: "<<pools;
-        if(emfate == 1){
+
+        if(posicion_ganador == -1){ // en caso de empate se activa este bloque de codigo.
             mostrar_result(matriz_juego, nombres, num_jugadores, -1, pools);
             cout<<"Ingresa cualquier tecla + Enter para pasar a la siguiente ronda   ";cin>>wait;
             continue;
         }
 
-        posicion_ganador = ganador(matriz_juego, num_jugadores, IDX_N_IGUALES, IDX_NUM_MAYOR, IDX_PAR_MAYOR);
-        cout<<endl<<endl<<nombres[posicion_ganador]<<" ha ganado!";
-
         mostrar_result(matriz_juego, nombres, num_jugadores, posicion_ganador, pools);
         redistribuir(matriz_juego, num_jugadores, posicion_ganador, pools, IDX_DINERO, IDX_APUESTA);
         pools = 0; // reinicia el monto de las apuestas al finalizar la partida.
 
-/**     nomas para comprobar como va el arreglo en cada turno. 
-        for(int j = 0; j<num_jugadores; j++){
-            for(int i =0; i<8; i++){
-                cout<<matriz_juego[j][i]<<"  ";
-            }
-        cout<<"------------------\n";
-        }
- */
-
-
-        int jugadores_sin_money = 0;
-        while(jugadores_sin_money != -1){
-            int pos_ceros = pos_cero_dinero(matriz_juego, num_jugadores, IDX_DINERO);
-            if(pos_ceros != -1){
-                matriz_juego[pos_ceros][IDX_JUGADOR_ACTIVO] = 0;
-                //"borra" al jugador sin dinero de la partida
-                for(int j = 0; j<10; j++){
-                    matriz_juego[pos_ceros][j] = 0;
-                    if(j == IDX_DINERO){
-                        matriz_juego[pos_ceros][IDX_DINERO] = -1;
+        //Este codigo pregunta si se quiere quiere seguir jugando, en caso de no tener $ para continuar, los descarta automaticamente
+        for(int i =0; i<num_jugadores; i++){
+            if(matriz_juego[i][IDX_JUGADOR_ACTIVO] == 1){
+                int jugador_activo = sacar_la_basura(matriz_juego, nombres, i, IDX_DINERO);
+                matriz_juego[i][IDX_JUGADOR_ACTIVO] = jugador_activo;
+                if(jugador_activo == 0){
+                    for(int j = 0; j<10; j++){
+                        // se deja solo el valor del dinero acumulado para evitar errores
+                        if(j<3 || j>3){
+                            matriz_juego[i][j] =0;
+                        }
                     }
+                    num_jugadores_activos--;
                 }
-                cout<<"Jugador "<<pos_ceros + 1<<": "<<nombres[pos_ceros]<<" no tiene dinero suficiente para continuar. Queda eliminado del juego.\n";
-                num_jugadores_activos--;
-            }
-            else{
-                jugadores_sin_money = -1;
             }
         }
-        cout<<"Presiona cualquier tecla para empezar una nueva ronda: ";cin>>wait;
+        cout<<"Presiona cualquier tecla para continuar: ";cin>>wait;
     }
-
+    //imprime el nombre del ganador del juego
+    cout<<"\n"<<nombres[pos_mayor_col(matriz_juego, num_jugadores, IDX_JUGADOR_ACTIVO)]<<" ha ganado el juego.";
     cout<<"\nFin del juego.";
 }
 
@@ -201,7 +185,7 @@ int apuesta(int matriz_juego[][10], int n_jugador, int idx_dinero){
         if(apuesta <= matriz_juego[n_jugador][idx_dinero] && apuesta>0){
             break;
         }
-        cout<<"Apuesta una cantidad de dinero dentro de tus posibilidades, mugre limosnero"<<endl<<endl;
+        cout<<"Tu apuesta esta fuera de tu presupuesto. Ingresa otra cantidad. "<<endl<<endl;
     }
     return apuesta;
 }
@@ -210,12 +194,15 @@ int calcular_iguales(int matrix[][10], int jugador){
     int n_dados_igual = 0;
 
     if(matrix[jugador][0] == matrix[jugador][1]){
+        cout<<"simon el 1 es igual que el 2";
         n_dados_igual++;
     }
     if(matrix[jugador][0] == matrix[jugador][2]){
+        cout<<"simon el 1 es igual que el 3";
         n_dados_igual++;
     }
     if(matrix[jugador][1] == matrix[jugador][2]){
+        cout<<"simon el 2 es igual que el 3";
         n_dados_igual++;
     }
 
@@ -258,11 +245,10 @@ int pool(int matrix[][10], int n_jugadores, int idx_apuesta){
     return sum_apuestas;
 }
 
-int empate(int matriz[][10], int n_jugadores, int idx_pares, int idx_n_mayor, int idx_num_iguales){
+int empate(int matriz[][10], int n_jugadores, int idx_pares, int idx_n_mayor, int idx_num_iguales, int idx_sum_dados){
     int empate = 0, pos_win, ver_empate;
     int max;
     max = num_mayor_col(matriz, n_jugadores, idx_pares);
-
 
     if(max == 0){
         pos_win = pos_mayor_col(matriz, n_jugadores, idx_n_mayor);
@@ -273,9 +259,26 @@ int empate(int matriz[][10], int n_jugadores, int idx_pares, int idx_n_mayor, in
             return empate;
         }
         else{
-            empate = 1;
-            cout<<"empate tipo 2";
-            return empate;
+            pos_win = pos_mayor_col(matriz, n_jugadores, idx_sum_dados);
+            ver_empate = verif_valor_repe_col(matriz, n_jugadores, idx_sum_dados, pos_win);
+
+            if(ver_empate == 0){
+                cout<<"empate x";
+                return empate;
+            }
+            else{
+                ver_empate = verif_arr_repetidos(matriz, n_jugadores, pos_win);
+                if(ver_empate == 0){
+                    cout<<"empate y";
+                    return empate;
+                }
+                else{
+                    empate = 1;
+                    cout<<"empate 4558";
+                    return empate;
+                }
+            }
+
         }
     }
     
@@ -296,9 +299,30 @@ int empate(int matriz[][10], int n_jugadores, int idx_pares, int idx_n_mayor, in
                 return empate;
             }
             else{
-                empate = 1;
-                cout<<"empate tipo 5";
-                return empate;
+                pos_win = pos_mayor_col(matriz, n_jugadores, idx_n_mayor);
+                ver_empate = verif_valor_repe_col(matriz, n_jugadores, idx_n_mayor, pos_win);
+
+                if(ver_empate == 0){
+                    cout<<"empate zxc";
+                    return empate;
+                }
+                else{
+                    pos_win = pos_mayor_col(matriz, n_jugadores, idx_sum_dados);
+                    ver_empate = verif_valor_repe_col(matriz, n_jugadores, idx_sum_dados, pos_win);
+
+                    if(ver_empate == 0){
+                        return empate;
+                    }
+                    else{
+                        ver_empate = verif_arr_repetidos(matriz, n_jugadores, pos_win);
+                        if(ver_empate ==0){
+                            return empate;
+                        }
+                        else{
+                            return 1;
+                        }
+                    }
+                }
             }
         }
 
@@ -392,26 +416,82 @@ int verif_valor_repe_col(int matrix[][10], int num_jugadores, int idx_col, int p
 }
 
 
-int ganador(int matriz[][10], int n_jugadores, int idx_pares, int idx_num_mayor, int idx_caras_mayor){
+int ganador(int matriz[][10], int n_jugadores, int idx_pares, int idx_num_mayor, int idx_caras_mayor, int idx_sum){
     int pos_win;
-    int max;
-    max = num_mayor_col(matriz, n_jugadores, idx_pares);
+    int max, ver_empate, empate = -1;
 
-    if(max == 0){
-        pos_win = pos_mayor_col(matriz, n_jugadores, idx_num_mayor);
-        return pos_win;
+    int matriz_prueba[n_jugadores][10];
+    for(int i =0; i<n_jugadores; i++){
+        for(int j = 0; j<10; j++){
+            matriz_prueba[i][j] = matriz[i][j];
+        }
     }
 
-    else{
-        pos_win = pos_mayor_col(matriz, n_jugadores, idx_pares);
-        int verif_empate = verif_valor_repe_col(matriz, n_jugadores, idx_pares, pos_win);
 
-        if(verif_empate == 0){
+    max = num_mayor_col(matriz_prueba, n_jugadores, idx_pares);
+
+    if(max == 0){
+        pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_num_mayor);
+        int ver_empate = verif_valor_repe_col(matriz_prueba, n_jugadores, idx_num_mayor, pos_win);
+
+        if(ver_empate == 0){
+            cout<<"asdlaksd";
             return pos_win;
         }
         else{
-            pos_win = pos_mayor_col(matriz, n_jugadores, idx_caras_mayor);
+            matriz_a_cero(matriz_prueba, n_jugadores, pos_win, idx_num_mayor);
+            pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_sum);
+            ver_empate = verif_valor_repe_col(matriz_prueba, n_jugadores, idx_sum, pos_win);
+
+            if(ver_empate == 1){
+                cout<<"yo mero";
+                return empate;
+            }
+            cout<<"este es el bueno";
             return pos_win;
+        }
+
+    }
+
+    else{
+        pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_pares);
+        int verif_empate = verif_valor_repe_col(matriz_prueba, n_jugadores, idx_pares, pos_win);
+
+        if(verif_empate == 0){
+            cout<<"RETIRD";
+            return pos_win;
+        }
+        else{
+            matriz_a_cero(matriz_prueba, n_jugadores, pos_win, idx_pares);
+            pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_caras_mayor);
+            ver_empate = verif_valor_repe_col(matriz_prueba, n_jugadores, idx_caras_mayor, pos_win);
+
+            if(ver_empate == 0){
+                cout<<"Este de aca";
+                return pos_win;
+            }
+            else{
+                matriz_a_cero(matriz_prueba, n_jugadores, pos_win, idx_caras_mayor);
+                pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_num_mayor);
+                ver_empate = verif_valor_repe_col(matriz_prueba, n_jugadores, idx_num_mayor, pos_win);
+
+                if(ver_empate == 0){
+                    cout<<"O este de aca";
+                    return pos_win;
+                }
+                else{
+                    matriz_a_cero(matriz_prueba, n_jugadores, pos_win, idx_num_mayor);
+                    pos_win = pos_mayor_col(matriz_prueba, n_jugadores, idx_sum);
+                    ver_empate = verif_arr_repetidos(matriz, n_jugadores, pos_win);
+
+                    if(ver_empate == 1){
+                        cout<<"return un error";
+                        return empate;
+                    }
+                    cout<<"last one";
+                    return pos_win;
+                }
+            }
         }
     }
 
@@ -475,4 +555,54 @@ int sum_dados(int matriz[][10], int idx_jugador){
     }
 
     return sum;
+}
+
+void matriz_a_cero(int matriz[][10], int n_jugadores, int pos, int idx_col){
+    int valor_ganador = matriz[pos][idx_col];
+    while(1 == 1){
+        for(int j = 0; j<n_jugadores; j++){
+            if(matriz[j][idx_col] != valor_ganador){
+                for(int i = 0; i<10; i++){
+                    matriz[j][i] = 0;
+                }
+            }
+        }
+        int iguales = 0;
+        for(int i = 0; i<n_jugadores; i++){
+            if(matriz[i][idx_col] != valor_ganador && matriz[i][idx_col] != 0){
+                iguales++;
+            }
+        }
+        if(iguales == 0){
+            break;
+        }
+    }
+}
+
+int sacar_la_basura(int matriz[][10], string nombres[], int pos_jugador, int idx_dinero){
+    int jugador_activo = 0;
+    if(matriz[pos_jugador][idx_dinero] == 0){
+            cout<<"\nEl jugador "<<pos_jugador+1<<": "<<nombres[pos_jugador]<<" no tiene dinero para continuar. A echar pulgas a otro lado\n";
+            return jugador_activo;
+    }
+    else{
+        char seguir;
+        
+        cout<<"\nJugador "<<pos_jugador+1<<" "<<nombres[pos_jugador]<<" actualmente cuentas con $"<<matriz[pos_jugador][idx_dinero]<<". ";
+        while(2 == 2){
+            cout<<"\nDesea continuar? s/n   ";cin>>seguir;cout<<endl;
+            if(seguir == 's'){
+                jugador_activo = 1;
+                return jugador_activo;
+            }
+            else if(seguir == 'n'){
+                return jugador_activo;
+            }
+            else{
+                cout<<"Input no valido. ";
+            }
+        }
+
+    }
+
 }
